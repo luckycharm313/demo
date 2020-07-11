@@ -8,114 +8,78 @@
  * @format
  */
 
-import React from 'react';
-import {
-  SafeAreaView,
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
-  StatusBar,
-} from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {SafeAreaView, StatusBar, FlatList} from 'react-native';
+import axios from 'axios';
+import MemberItem from './memberItem';
+import styles from './styles';
 
-import {
-  Header,
-  LearnMoreLinks,
-  Colors,
-  DebugInstructions,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+const baseUrl = 'http://localhost:3000';
+interface APIGetPhotosResponse {
+  memberId: string;
+  photos: APIPhoto[];
+}
 
-declare const global: {HermesInternal: null | {}};
-
+interface APIPhoto {
+  id: string;
+  url: string;
+  width: number;
+  height: number;
+}
 ////////////////////////////////////////////////////////////////////////////////
 // INTERVIEW NOTES: START WITH THIS COMPONENT FOR YOUR IMPLEMENTATION
 ////////////////////////////////////////////////////////////////////////////////
 const App = () => {
+  const [members, setMembers] = useState<APIPhoto[] | []>([]);
+
+  useEffect(() => {
+    axios
+      .get(`${baseUrl}/member/1/photos`)
+      .then((response) => {
+        console.log('REPONSE DATA ', response);
+        let _members: APIGetPhotosResponse = response.data[0];
+        setMembers(_members.photos);
+      })
+      .catch((err) => {});
+  }, []);
+
+  const _onHandleDelete = (id: string) => {
+    var _members: APIPhoto[] = [...members];
+    var _newMembers: APIPhoto[] = [];
+    _members.forEach((element) => {
+      if (element.id != id) {
+        _newMembers.push(element);
+      }
+    });
+    setMembers(_newMembers);
+  };
+
+  const _renderItem = ({item}: {item: APIPhoto}) => {
+    return (
+      <MemberItem
+        url={item.url}
+        height={item.height}
+        width={item.width}
+        onHandleDelete={() => _onHandleDelete(item.id)}
+      />
+    );
+  };
+
   return (
     <>
       <StatusBar barStyle="dark-content" />
-      <SafeAreaView>
-        <ScrollView
-          contentInsetAdjustmentBehavior="automatic"
-          style={styles.scrollView}>
-          <Header />
-          {global.HermesInternal == null ? null : (
-            <View style={styles.engine}>
-              <Text style={styles.footer}>Engine: Hermes</Text>
-            </View>
-          )}
-          <View style={styles.body}>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Step One</Text>
-              <Text style={styles.sectionDescription}>
-                Edit <Text style={styles.highlight}>App.tsx</Text> to change
-                this screen and then come back to see your edits.
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>See Your Changes</Text>
-              <Text style={styles.sectionDescription}>
-                <ReloadInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Debug</Text>
-              <Text style={styles.sectionDescription}>
-                <DebugInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Learn More</Text>
-              <Text style={styles.sectionDescription}>
-                Read the docs to discover what to do next:
-              </Text>
-            </View>
-            <LearnMoreLinks />
-          </View>
-        </ScrollView>
+      <SafeAreaView style={styles.container}>
+        <FlatList
+          style={styles.memberListContainer}
+          numColumns={3}
+          data={members}
+          columnWrapperStyle={{justifyContent: 'space-between'}}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={_renderItem}
+        />
       </SafeAreaView>
     </>
   );
 };
-
-const styles = StyleSheet.create({
-  scrollView: {
-    backgroundColor: Colors.lighter,
-  },
-  engine: {
-    position: 'absolute',
-    right: 0,
-  },
-  body: {
-    backgroundColor: Colors.white,
-  },
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: Colors.black,
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-    color: Colors.dark,
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-  footer: {
-    color: Colors.dark,
-    fontSize: 12,
-    fontWeight: '600',
-    padding: 4,
-    paddingRight: 12,
-    textAlign: 'right',
-  },
-});
 
 export default App;
