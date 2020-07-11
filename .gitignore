@@ -1,0 +1,4 @@
+/app/node_modules/
+/mock/node_modules/
+/app/ios/build/
+/app/ios/Pods/
